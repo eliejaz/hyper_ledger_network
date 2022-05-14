@@ -1,0 +1,27 @@
+[
+  {
+    "name": "Hosp1MSPPrivateCollection",
+    "policy": "OR('Hosp1MSP.member')",
+    "requiredPeerCount": 0,
+    "maxPeerCount": 1,
+    "blockToLive":3,
+    "memberOnlyRead": true,
+    "memberOnlyWrite": false,
+    "endorsementPolicy": {
+      "signaturePolicy": "OR('Hosp1MSP.member')"
+    }
+  },
+  {
+    "name": "Hosp2MSPPrivateCollection",
+    "policy": "OR('Hosp2MSP.member')",
+    "requiredPeerCount": 0,
+    "maxPeerCount": 1,
+    "blockToLive":3,
+    "memberOnlyRead": true,
+    "memberOnlyWrite": false,
+    "endorsementPolicy": {
+      "signaturePolicy": "OR('Hosp2MSP.member')"
+    }
+   }
+ ]
+ 

@@ -1,0 +1,245 @@
+# Copyright IBM Corp. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+version: '3.7'
+
+volumes:
+  orderer.eurisko:
+  peer0.hosp1.arez:
+  peer1.hosp1.arez:
+  peer0.hosp2.rizk:
+  peer1.hosp2.rizk:
+  
+networks:
+  test:
+    name: fabric_test
+
+services:
+
+  orderer.eurisko:
+    container_name: orderer.eurisko
+    image: hyperledger/fabric-orderer:latest
+    dns_search: .
+    labels:
+      service: hyperledger-fabric
+    environment:
+      - FABRIC_LOGGING_SPEC=INFO
+      - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
+      - ORDERER_GENERAL_LISTENPORT=7050
+      - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
+      - ORDERER_GENERAL_LOCALMSPDIR=/var/hyperledger/orderer/msp
+      # enabled TLS
+      - ORDERER_GENERAL_TLS_ENABLED=true
+      - ORDERER_GENERAL_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/server.key
+      - ORDERER_GENERAL_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt
+      - ORDERER_GENERAL_TLS_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
+      - ORDERER_GENERAL_CLUSTER_CLIENTCERTIFICATE=/var/hyperledger/orderer/tls/server.crt
+      - ORDERER_GENERAL_CLUSTER_CLIENTPRIVATEKEY=/var/hyperledger/orderer/tls/server.key
+      - ORDERER_GENERAL_CLUSTER_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
+      - ORDERER_GENERAL_BOOTSTRAPMETHOD=none
+      - ORDERER_CHANNELPARTICIPATION_ENABLED=true
+      - ORDERER_ADMIN_TLS_ENABLED=true
+      - ORDERER_ADMIN_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt
+      - ORDERER_ADMIN_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/server.key
+      - ORDERER_ADMIN_TLS_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
+      - ORDERER_ADMIN_TLS_CLIENTROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
+      - ORDERER_ADMIN_LISTENADDRESS=0.0.0.0:7053
+      - ORDERER_OPERATIONS_LISTENADDRESS=orderer.eurisko:9443
+      - ORDERER_METRICS_PROVIDER=prometheus
+    working_dir: /root
+    command: orderer
+    volumes:
+        - ../organizations/ordererOrganizations/eurisko/orderers/orderer.eurisko/msp:/var/hyperledger/orderer/msp
+        - ../organizations/ordererOrganizations/eurisko/orderers/orderer.eurisko/tls/:/var/hyperledger/orderer/tls
+        - orderer.eurisko:/var/hyperledger/production/orderer
+    ports:
+      - 7050:7050
+      - 7053:7053
+      - 9443:9443
+    networks:
+      - test
+
+
+  peer0.hosp1.arez:
+    container_name: peer0.hosp1.arez
+    image: hyperledger/fabric-peer:latest
+    labels:
+      service: hyperledger-fabric
+    environment:
+      - FABRIC_CFG_PATH=/etc/hyperledger/peercfg
+      - FABRIC_LOGGING_SPEC=INFO
+      #- FABRIC_LOGGING_SPEC=DEBUG
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_PROFILE_ENABLED=false
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
+      # Peer specific variables
+      - CORE_PEER_ID=peer0.hosp1.arez
+      - CORE_PEER_ADDRESS=peer0.hosp1.arez:7051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:7051
+      - CORE_PEER_CHAINCODEADDRESS=peer0.hosp1.arez:7052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer1.hosp1.arez:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.hosp1.arez:7051
+      - CORE_PEER_LOCALMSPID=Hosp1MSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/msp
+      # - CORE_OPERATIONS_LISTENADDRESS=peer0.hosp1.arez:9444
+      - CORE_METRICS_PROVIDER=prometheus
+      - CHAINCODE_AS_A_SERVICE_BUILDER_CONFIG={"peername":"peer0org1"}
+      - CORE_CHAINCODE_EXECUTETIMEOUT=300s
+    volumes:
+        - ../organizations/peerOrganizations/hosp1.arez/peers/peer0.hosp1.arez:/etc/hyperledger/fabric
+        - peer0.hosp1.arez:/var/hyperledger/production
+    working_dir: /root
+    command: peer node start
+    ports:
+      - 7051:7051
+      # - 9444:9444
+    networks:
+      - test
+
+  peer1.hosp1.arez:
+    container_name: peer1.hosp1.arez
+    image: hyperledger/fabric-peer:latest
+    labels:
+      service: hyperledger-fabric
+    environment:
+      - FABRIC_CFG_PATH=/etc/hyperledger/peercfg
+      - FABRIC_LOGGING_SPEC=INFO
+      #- FABRIC_LOGGING_SPEC=DEBUG
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_PROFILE_ENABLED=false
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
+      # Peer specific variables
+      - CORE_PEER_ID=peer1.hosp1.arez
+      - CORE_PEER_ADDRESS=peer1.hosp1.arez:7051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:7051
+      - CORE_PEER_CHAINCODEADDRESS=peer1.hosp1.arez:7052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.hosp1.arez:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.hosp1.arez:7051
+      - CORE_PEER_LOCALMSPID=Hosp1MSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/msp
+      # - CORE_OPERATIONS_LISTENADDRESS=peer1.hosp1.arez:9444
+      - CORE_METRICS_PROVIDER=prometheus
+      - CHAINCODE_AS_A_SERVICE_BUILDER_CONFIG={"peername":"peer1org1"}
+      - CORE_CHAINCODE_EXECUTETIMEOUT=300s
+    volumes:
+        - ../organizations/peerOrganizations/hosp1.arez/peers/peer1.hosp1.arez:/etc/hyperledger/fabric
+        - peer1.hosp1.arez:/var/hyperledger/production
+    working_dir: /root
+    command: peer node start
+    ports:
+      - 10051:7051
+      # - 11444:9444
+    networks:
+      - test
+
+
+  peer0.hosp2.rizk:
+    container_name: peer0.hosp2.rizk
+    image: hyperledger/fabric-peer:latest
+    labels:
+      service: hyperledger-fabric
+    environment:
+      - FABRIC_CFG_PATH=/etc/hyperledger/peercfg
+      - FABRIC_LOGGING_SPEC=INFO
+      #- FABRIC_LOGGING_SPEC=DEBUG
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_PROFILE_ENABLED=false
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
+      # Peer specific variables
+      - CORE_PEER_ID=peer0.hosp2.rizk
+      - CORE_PEER_ADDRESS=peer0.hosp2.rizk:9051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:9051
+      - CORE_PEER_CHAINCODEADDRESS=peer0.hosp2.rizk:9052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:9052
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.hosp2.rizk:9051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer1.hosp2.rizk:9051
+      - CORE_PEER_LOCALMSPID=Hosp2MSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/msp      
+      # - CORE_OPERATIONS_LISTENADDRESS=peer0.hosp2.rizk:9444
+      - CORE_METRICS_PROVIDER=prometheus
+      - CHAINCODE_AS_A_SERVICE_BUILDER_CONFIG={"peername":"peer0org2"}
+      - CORE_CHAINCODE_EXECUTETIMEOUT=300s
+    volumes:
+        - ../organizations/peerOrganizations/hosp2.rizk/peers/peer0.hosp2.rizk:/etc/hyperledger/fabric
+        - peer0.hosp2.rizk:/var/hyperledger/production
+    working_dir: /root
+    command: peer node start
+    ports:
+      - 9051:9051
+      # - 9445:9445
+    networks:
+      - test
+
+  peer1.hosp2.rizk:
+    container_name: peer1.hosp2.rizk
+    image: hyperledger/fabric-peer:latest
+    labels:
+      service: hyperledger-fabric
+    environment:
+      - FABRIC_CFG_PATH=/etc/hyperledger/peercfg
+      - FABRIC_LOGGING_SPEC=INFO
+      #- FABRIC_LOGGING_SPEC=DEBUG
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_PROFILE_ENABLED=false
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
+      # Peer specific variables
+      - CORE_PEER_ID=peer1.hosp2.rizk
+      - CORE_PEER_ADDRESS=peer1.hosp2.rizk:9051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:9051
+      - CORE_PEER_CHAINCODEADDRESS=peer1.hosp2.rizk:9052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:9052
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.hosp2.rizk:9051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.hosp2.rizk:9051
+      - CORE_PEER_LOCALMSPID=Hosp2MSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/msp      
+      # - CORE_OPERATIONS_LISTENADDRESS=peer1.hosp2.rizk:9444
+      - CORE_METRICS_PROVIDER=prometheus
+      - CHAINCODE_AS_A_SERVICE_BUILDER_CONFIG={"peername":"peer1org2"}
+      - CORE_CHAINCODE_EXECUTETIMEOUT=300s
+    volumes:
+        - ../organizations/peerOrganizations/hosp2.rizk/peers/peer1.hosp2.rizk:/etc/hyperledger/fabric
+        - peer1.hosp2.rizk:/var/hyperledger/production
+    working_dir: /root
+    command: peer node start
+    ports:
+      - 12051:9051
+      # - 12445:9445
+    networks:
+      - test
+
+  cli:
+    container_name: cli
+    image: hyperledger/fabric-tools:latest
+    labels:
+      service: hyperledger-fabric
+    tty: true
+    stdin_open: true
+    environment:
+      - GOPATH=/opt/gopath
+      - FABRIC_LOGGING_SPEC=INFO
+      - FABRIC_CFG_PATH=/etc/hyperledger/peercfg
+      #- FABRIC_LOGGING_SPEC=DEBUG
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    command: /bin/bash
+    volumes:
+        - ../organizations:/opt/gopath/src/github.com/hyperledger/fabric/peer/organizations
+        - ../scripts:/opt/gopath/src/github.com/hyperledger/fabric/peer/scripts/
+    depends_on:
+      - peer0.hosp1.arez
+      - peer1.hosp1.arez
+      - peer0.hosp2.rizk
+      - peer1.hosp2.rizk
+    networks:
+      - test
